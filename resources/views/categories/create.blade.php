@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Tambah Kategori Buku')
+@section('title', 'Tambah Kategori')
 
 @section('content')
     <div class="container-fluid">
@@ -11,7 +11,7 @@
             </a>
 
             <h5 class="mb-0 font-weight-bold text-gray-800">
-                Tambah Kategori Buku
+                Tambah Kategori
             </h5>
         </div>
 
@@ -25,7 +25,7 @@
                         <label class="small text-muted">Nama</label>
                         <input type="text" name="name"
                             class="form-control form-control-sm rounded-pill px-3 @error('name') is-invalid @enderror"
-                            value="{{ old('name', $data->name ?? '') }}" placeholder="Petualangan / Horor">
+                            value="{{ old('name', $data->name ?? '') }}" placeholder="Minuman">
                         @error('name')
                             <div class="text-danger small mt-1 ml-2">
                                 <i class="fas fa-exclamation-circle mr-1"></i>

@@ -2,61 +2,65 @@
 
 namespace App\Services;
 
-use App\Models\Book;
-use App\Models\User;
-use App\Models\Borrowing;
+use App\Models\Product;
+use App\Models\Vendor;
 
 class DashboardService
 {
-    public function statistics(): array
+    public function getDashboardData(): array
     {
+        [$chartLabels, $chartData] = $this->productActivity(6);
+
+        $lowStockProducts   = Product::lowStock()->count();
+        $outOfStockProducts = Product::outOfStock()->count();
+
         return [
+            'totalProducts'      => Product::count(),
+            'totalVendors'       => Vendor::count(),
+            'lowStockProducts'   => $lowStockProducts,
+            'outOfStockProducts' => $outOfStockProducts,
+            'attentionTotal'     => $lowStockProducts + $outOfStockProducts,
 
-            'total_books' => Book::count(),
+            'chartLabels' => $chartLabels,
+            'chartData'   => $chartData,
 
-            'total_members' => User::whereHas('userLevel', function ($query) {
-                $query->where(
-                    'name',
-                    'Anggota Perpustakaan'
-                );
-            })->count(),
+            'latestProducts' => Product::with('category')
+                ->latest()
+                ->take(4)
+                ->get(),
 
-            'borrowed_books' => Borrowing::where(
-                'status',
-                'borrowed'
-            )->count(),
-
-            'overdue_books' => Borrowing::where(function ($query) {
-
-                $query->where(function ($q) {
-
-                    $q->where('status', 'borrowed')
-                        ->whereDate('due_date', '<', now());
-                })->orWhere(function ($q) {
-
-                    $q->whereNotNull('returned_at')
-                        ->whereColumn('returned_at', '>', 'due_date');
-                });
-            })->count(),
+            // Stok kosong dan menipis dalam satu daftar, yang kosong tampil lebih dulu.
+            'attentionList' => Product::with('category')
+                ->needsAttention()
+                ->orderBy('stock')
+                ->take(8)
+                ->get(),
         ];
     }
 
-    public function recentBorrowings()
+    /**
+     * Jumlah produk baru per bulan untuk N bulan terakhir (termasuk bulan ini).
+     *
+     * @return array{0: array<int, string>, 1: array<int, int>}
+     */
+    protected function productActivity(int $months): array
     {
-        return Borrowing::with([
-            'book',
-            'member',
-        ])
-            ->latest()
-            ->take(5)
-            ->get();
-    }
+        $start = now()->startOfMonth()->subMonths($months - 1);
 
-    public function lowStockBooks()
-    {
-        return Book::where('stock', '<=', 3)
-            ->orderBy('stock', 'asc')
-            ->take(5)
-            ->get();
+        $counts = Product::where('created_at', '>=', $start)
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as ym, COUNT(*) as total")
+            ->groupBy('ym')
+            ->pluck('total', 'ym');
+
+        $labels = [];
+        $data   = [];
+
+        for ($i = 0; $i < $months; $i++) {
+            $month    = $start->copy()->addMonths($i);
+            $labels[] = $month->translatedFormat('M');
+            $data[]   = (int) ($counts[$month->format('Y-m')] ?? 0);
+        }
+
+        return [$labels, $data];
     }
 }

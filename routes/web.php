@@ -1,15 +1,14 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AuthorController;
-use App\Http\Controllers\BookCategoryController;
-use App\Http\Controllers\BookController;
-use App\Http\Controllers\BorrowingController;
+use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MenuController;
-use App\Http\Controllers\PublisherController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SubCategoriesController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserLevelController;
+use App\Http\Controllers\VendorController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -21,8 +20,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/', [DashboardController::class, 'index'])
-        ->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Menu
     Route::prefix('menus')->controller(MenuController::class)->group(function () {
@@ -128,8 +126,8 @@ Route::middleware('auth')->group(function () {
             ->middleware('check.permission:user-levels.index,can_edit');
     });
 
-    // Kategori Buku
-    Route::prefix('categories')->controller(BookCategoryController::class)->group(function () {
+    // Kategori
+    Route::prefix('categories')->controller(CategoriesController::class)->group(function () {
 
         Route::get('/', 'index')
             ->name('categories.index')
@@ -143,140 +141,116 @@ Route::middleware('auth')->group(function () {
             ->name('categories.store')
             ->middleware('check.permission:categories.index,can_create');
 
-        Route::get('/{bookCategory}', 'show')
+        Route::get('/{Categories}', 'show')
             ->name('categories.show')
             ->middleware('check.permission:categories.index,can_view');
 
-        Route::get('/{bookCategory}/edit', 'edit')
+        Route::get('/{Categories}/edit', 'edit')
             ->name('categories.edit')
             ->middleware('check.permission:categories.index,can_edit');
 
-        Route::put('/{bookCategory}', 'update')
+        Route::put('/{Categories}', 'update')
             ->name('categories.update')
             ->middleware('check.permission:categories.index,can_edit');
 
-        Route::delete('/{bookCategory}', 'destroy')
+        Route::delete('/{Categories}', 'destroy')
             ->name('categories.destroy')
             ->middleware('check.permission:categories.index,can_delete');
     });
 
-    // Author
-    Route::prefix('authors')->controller(AuthorController::class)->group(function () {
+    // Sub Kategori
+    Route::prefix('sub-categories')->controller(SubCategoriesController::class)->group(function () {
 
         Route::get('/', 'index')
-            ->name('authors.index')
-            ->middleware('check.permission:authors.index,can_view');
+            ->name('sub-categories.index')
+            ->middleware('check.permission:sub-categories.index,can_view');
 
         Route::get('/create', 'create')
-            ->name('authors.create')
-            ->middleware('check.permission:authors.index,can_create');
+            ->name('sub-categories.create')
+            ->middleware('check.permission:sub-categories.index,can_create');
 
         Route::post('/', 'store')
-            ->name('authors.store')
-            ->middleware('check.permission:authors.index,can_create');
+            ->name('sub-categories.store')
+            ->middleware('check.permission:sub-categories.index,can_create');
 
-        Route::get('/{author}', 'show')
-            ->name('authors.show')
-            ->middleware('check.permission:authors.index,can_view');
+        Route::get('/{SubCategories}', 'show')
+            ->name('sub-categories.show')
+            ->middleware('check.permission:sub-categories.index,can_view');
 
-        Route::get('/{author}/edit', 'edit')
-            ->name('authors.edit')
-            ->middleware('check.permission:authors.index,can_edit');
+        Route::get('/{SubCategories}/edit', 'edit')
+            ->name('sub-categories.edit')
+            ->middleware('check.permission:sub-categories.index,can_edit');
 
-        Route::put('/{author}', 'update')
-            ->name('authors.update')
-            ->middleware('check.permission:authors.index,can_edit');
+        Route::put('/{SubCategories}', 'update')
+            ->name('sub-categories.update')
+            ->middleware('check.permission:sub-categories.index,can_edit');
 
-        Route::delete('/{author}', 'destroy')
-            ->name('authors.destroy')
-            ->middleware('check.permission:authors.index,can_delete');
+        Route::delete('/{SubCategories}', 'destroy')
+            ->name('sub-categories.destroy')
+            ->middleware('check.permission:sub-categories.index,can_delete');
     });
 
-    // Publisher
-    Route::prefix('publishers')->controller(PublisherController::class)->group(function () {
+    // Produk
+    Route::prefix('products')->controller(ProductController::class)->group(function () {
 
         Route::get('/', 'index')
-            ->name('publishers.index')
-            ->middleware('check.permission:publishers.index,can_view');
+            ->name('products.index')
+            ->middleware('check.permission:products.index,can_view');
 
         Route::get('/create', 'create')
-            ->name('publishers.create')
-            ->middleware('check.permission:publishers.index,can_create');
+            ->name('products.create')
+            ->middleware('check.permission:products.index,can_create');
 
         Route::post('/', 'store')
-            ->name('publishers.store')
-            ->middleware('check.permission:publishers.index,can_create');
+            ->name('products.store')
+            ->middleware('check.permission:products.index,can_create');
 
-        Route::get('/{publisher}', 'show')
-            ->name('publishers.show')
-            ->middleware('check.permission:publishers.index,can_view');
+        Route::get('/{product}', 'show')
+            ->name('products.show')
+            ->middleware('check.permission:products.index,can_view');
 
-        Route::get('/{publisher}/edit', 'edit')
-            ->name('publishers.edit')
-            ->middleware('check.permission:publishers.index,can_edit');
+        Route::get('/{product}/edit', 'edit')
+            ->name('products.edit')
+            ->middleware('check.permission:products.index,can_edit');
 
-        Route::put('/{publisher}', 'update')
-            ->name('publishers.update')
-            ->middleware('check.permission:publishers.index,can_edit');
+        Route::put('/{product}', 'update')
+            ->name('products.update')
+            ->middleware('check.permission:products.index,can_edit');
 
-        Route::delete('/{publisher}', 'destroy')
-            ->name('publishers.destroy')
-            ->middleware('check.permission:publishers.index,can_delete');
+        Route::delete('/{product}', 'destroy')
+            ->name('products.destroy')
+            ->middleware('check.permission:products.index,can_delete');
     });
 
-    // Book
-    Route::prefix('books')->controller(BookController::class)->group(function () {
+    // Vendor
+    Route::prefix('vendors')->controller(VendorController::class)->group(function () {
 
         Route::get('/', 'index')
-            ->name('books.index')
-            ->middleware('check.permission:books.index,can_view');
+            ->name('vendors.index')
+            ->middleware('check.permission:vendors.index,can_view');
 
         Route::get('/create', 'create')
-            ->name('books.create')
-            ->middleware('check.permission:books.index,can_create');
+            ->name('vendors.create')
+            ->middleware('check.permission:vendors.index,can_create');
 
         Route::post('/', 'store')
-            ->name('books.store')
-            ->middleware('check.permission:books.index,can_create');
+            ->name('vendors.store')
+            ->middleware('check.permission:vendors.index,can_create');
 
-        Route::get('/{book}', 'show')
-            ->name('books.show')
-            ->middleware('check.permission:books.index,can_view');
+        Route::get('/{vendor}', 'show')
+            ->name('vendors.show')
+            ->middleware('check.permission:vendors.index,can_view');
 
-        Route::get('/{book}/edit', 'edit')
-            ->name('books.edit')
-            ->middleware('check.permission:books.index,can_edit');
+        Route::get('/{vendor}/edit', 'edit')
+            ->name('vendors.edit')
+            ->middleware('check.permission:vendors.index,can_edit');
 
-        Route::put('/{book}', 'update')
-            ->name('books.update')
-            ->middleware('check.permission:books.index,can_edit');
+        Route::put('/{vendor}', 'update')
+            ->name('vendors.update')
+            ->middleware('check.permission:vendors.index,can_edit');
 
-        Route::delete('/{book}', 'destroy')
-            ->name('books.destroy')
-            ->middleware('check.permission:books.index,can_delete');
-    });
-
-    // Borrow
-    Route::prefix('borrowings')->controller(BorrowingController::class)->group(function () {
-
-        Route::get('/', 'index')
-            ->name('borrowings.index')
-            ->middleware('check.permission:borrowings.index,can_view');
-
-        Route::get('/create', 'create')
-            ->name('borrowings.create')
-            ->middleware('check.permission:borrowings.index,can_create');
-
-        Route::post('/', 'store')
-            ->name('borrowings.store')
-            ->middleware('check.permission:borrowings.index,can_create');
-
-        Route::get('/{borrowing}', 'show')
-            ->name('borrowings.show')
-            ->middleware('check.permission:borrowings.index,can_view');
-
-        Route::patch('/{borrowing}/return', 'returnBook')
-            ->name('borrowings.return')
-            ->middleware('check.permission:borrowings.index,can_edit');
+        Route::delete('/{vendor}', 'destroy')
+            ->name('vendors.destroy')
+            ->middleware('check.permission:vendors.index,can_delete');
     });
 });

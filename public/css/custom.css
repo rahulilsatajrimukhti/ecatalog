@@ -4,6 +4,7 @@
 .btn-add-catb,
 .btn-add-publish,
 .btn-add-borrow,
+.btn-add-subcat,
 .btn-add-author {
     display: inline-flex;
     align-items: center;
@@ -24,6 +25,7 @@
 .btn-add-catb i,
 .btn-add-publish i,
 .btn-add-borrow i,
+.btn-add-subcat i,
 .btn-add-author i {
     font-size: 14px;
     min-width: 16px;
@@ -36,6 +38,7 @@
 .btn-add-catb .btn-text,
 .btn-add-publish .btn-text,
 .btn-add-borrow .btn-text,
+.btn-add-subcat .btn-text,
 .btn-add-author .btn-text {
     opacity: 0;
     margin-left: 8px;
@@ -53,7 +56,7 @@
 }
 
 .btn-add-user:hover {
-    width: 75px;
+    width: 88px;
     background: #2e59d9;
     color: #fff !important;
 }
@@ -65,7 +68,7 @@
 }
 
 .btn-add-catb:hover {
-    width: 130px;
+    width: 100px;
     background: #2e59d9;
     color: #fff !important;
 }
@@ -88,6 +91,12 @@
     color: #fff !important;
 }
 
+.btn-add-subcat:hover {
+    width: 120px;
+    background: #2e59d9;
+    color: #fff !important;
+}
+
 .btn-add:hover,
 .btn-add:focus,
 .btn-add:active,
@@ -106,6 +115,9 @@
 .btn-add-borrow:hover,
 .btn-add-borrow:focus,
 .btn-add-borrow:active,
+.btn-add-subcat:hover,
+.btn-add-subcat:focus,
+.btn-add-subcat:active,
 .btn-add-catb:hover,
 .btn-add-catb:focus,
 .btn-add-catb:active {
@@ -119,6 +131,7 @@
 .btn-add-author:hover .btn-text,
 .btn-add-publish:hover .btn-text,
 .btn-add-borrow:hover .btn-text,
+.btn-add-subcat:hover .btn-text,
 .btn-add-catb:hover .btn-text {
     opacity: 1;
 }

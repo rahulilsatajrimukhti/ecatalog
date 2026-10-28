@@ -1,18 +1,18 @@
 @extends('layouts.app')
-@section('title', 'Kategori Buku')
+@section('title', 'Kategori')
 
 @section('content')
     <div class="container-fluid">
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0 font-weight-bold text-gray-800">
-                Kategori Buku
+                Kategori
             </h5>
 
             @if (canAccess('categories.index', 'can_create'))
                 <a href="{{ route('categories.create') }}" class="btn-add-catb">
                     <i class="fas fa-plus"></i>
-                    <span class="btn-text">Kategori Buku</span>
+                    <span class="btn-text">Kategori</span>
                 </a>
             @endif
         </div>

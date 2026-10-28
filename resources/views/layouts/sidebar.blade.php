@@ -5,7 +5,7 @@
         <div class="sidebar-brand-icon rotate-n-15">
             <i class="fas fa-book"></i>
         </div>
-        <div class="sidebar-brand-text mx-3">E-library</div>
+        <div class="sidebar-brand-text mx-3">E-Catalog</div>
     </a>
 
     <!-- Divider -->
