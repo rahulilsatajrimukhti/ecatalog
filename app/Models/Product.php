@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -54,6 +55,21 @@ class Product extends Model
             $this->stock <= 0                    => 'out',
             $this->stock <= $this->minimum_stock => 'low',
             default                              => 'available',
+        });
+    }
+
+    protected function imageUrl(): Attribute
+    {
+        return Attribute::get(function () {
+            if (! $this->image) {
+                return null;
+            }
+
+            $disk = config('filesystems.product_disk', 'public');
+
+            return $disk === 'public'
+                ? asset('storage/' . $this->image)
+                : Storage::disk($disk)->url($this->image);
         });
     }
 }

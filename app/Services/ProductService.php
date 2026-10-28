@@ -17,6 +17,11 @@ class ProductService
         ])->orderBy('name', 'asc')->get();
     }
 
+    private function disk(): string
+    {
+        return config('filesystems.product_disk', 'public');
+    }
+
     /**
      * Daftar produk per halaman, dengan filter kategori dan pencarian.
      * Filter: ['category' => id, 'search' => teks]
@@ -51,7 +56,7 @@ class ProductService
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')
-                ->store('products', 'public');
+                ->store('products', $this->disk());
         }
 
         return Product::create($data);
@@ -76,13 +81,13 @@ class ProductService
         if ($request->hasFile('image')) {
             if (
                 $product->image &&
-                Storage::disk('public')->exists($product->image)
+                Storage::disk($this->disk())->exists($product->image)
             ) {
-                Storage::disk('public')->delete($product->image);
+                Storage::disk($this->disk())->delete($product->image);
             }
 
             $data['image'] = $request->file('image')
-                ->store('products', 'public');
+                ->store('products', $this->disk());
         }
 
         $product->update($data);
@@ -96,9 +101,9 @@ class ProductService
 
         if (
             $product->image &&
-            Storage::disk('public')->exists($product->image)
+            Storage::disk($this->disk())->exists($product->image)
         ) {
-            Storage::disk('public')->delete($product->image);
+            Storage::disk($this->disk())->delete($product->image);
         }
 
         $product->delete();

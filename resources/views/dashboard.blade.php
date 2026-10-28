@@ -344,11 +344,9 @@
                         <div class="latest-item">
                             <div class="thumb">
                                 @if (!empty($product->image))
-                                    <button type="button" class="thumb-btn"
-                                        data-preview="{{ asset('storage/' . $product->image) }}"
+                                    <button type="button" class="thumb-btn" data-preview="{{ $product->image_url }}"
                                         data-title="{{ $product->name }}" title="Lihat gambar">
-                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
-                                            loading="lazy">
+                                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}" loading="lazy">
                                     </button>
                                 @else
                                     <i class="fas fa-image"></i>

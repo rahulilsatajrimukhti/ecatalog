@@ -11,8 +11,7 @@
 <a href="{{ route('customer.products.show', $product->id) }}" class="ec-card">
     <div class="ec-media">
         @if ($product->image)
-            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="ec-product-image"
-                loading="lazy">
+            <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="ec-product-image" loading="lazy">
         @else
             <div class="ec-product-placeholder" aria-hidden="true">
                 <i class="bi bi-image"></i>

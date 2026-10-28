@@ -35,8 +35,7 @@
                 {{-- Gambar --}}
                 <div class="col-md-5">
                     @if ($product->image)
-                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
-                            class="ec-detail-image">
+                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="ec-detail-image">
                     @else
                         <div class="ec-detail-image d-flex flex-column align-items-center justify-content-center"
                             style="min-height: 320px;">
