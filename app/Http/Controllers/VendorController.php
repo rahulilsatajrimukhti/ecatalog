@@ -7,6 +7,7 @@ use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
 use App\Services\VendorService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class VendorController extends Controller
@@ -18,9 +19,16 @@ class VendorController extends Controller
         $this->service = $service;
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $data = $this->service->getAll();
+        $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'in:0,1'],
+        ]);
+
+        $data = $this->service->getAll(
+            $request->only(['search', 'status'])
+        );
 
         return view('vendors.index', compact('data'));
     }

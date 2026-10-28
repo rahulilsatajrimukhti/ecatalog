@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Str;
 
 class Vendor extends Model
 {
@@ -26,5 +28,16 @@ class Vendor extends Model
         return [
             'is_active' => 'boolean',
         ];
+    }
+
+    protected function initials(): Attribute
+    {
+        return Attribute::get(fn() => Str::of($this->name)
+            ->replaceMatches('/^(PT|CV)\.?\s+/i', '')
+            ->explode(' ')
+            ->filter()
+            ->map(fn($w) => Str::upper(Str::substr($w, 0, 1)))
+            ->take(2)
+            ->implode(''));
     }
 }

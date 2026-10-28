@@ -31,6 +31,32 @@
             </div>
         @endif
 
+        {{-- FILTER --}}
+        <form action="{{ route('vendors.index') }}" method="GET"
+            class="filter-bar d-flex flex-wrap align-items-center mb-3">
+
+            <select name="status" class="custom-select filter-control filter-select mr-2 mb-2" aria-label="Filter status"
+                onchange="this.form.submit()">
+                <option value="">Semua Status</option>
+                <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Aktif</option>
+                <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Nonaktif</option>
+            </select>
+
+            <div class="filter-search mr-2 mb-2">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="text" name="search" value="{{ request('search') }}" class="form-control filter-control"
+                    placeholder="Cari kode, nama, atau contact person..." aria-label="Cari vendor" autocomplete="off">
+            </div>
+
+            <button type="submit" class="btn btn-primary filter-btn mr-2 mb-2">Cari</button>
+
+            @if (request()->filled('search') || request()->filled('status'))
+                <a href="{{ route('vendors.index') }}" class="btn btn-link text-muted filter-reset mb-2">
+                    <i class="fas fa-undo-alt mr-1"></i>Reset
+                </a>
+            @endif
+        </form>
+
         {{-- TABLE --}}
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
@@ -131,7 +157,11 @@
                             @empty
                                 <tr>
                                     <td colspan="9" class="text-center small text-muted py-4">
-                                        Belum ada data vendor
+                                        @if (request()->filled('search') || request()->filled('status'))
+                                            Tidak ada vendor yang cocok dengan filter
+                                        @else
+                                            Belum ada data vendor
+                                        @endif
                                     </td>
                                 </tr>
                             @endforelse
@@ -139,15 +169,92 @@
                     </table>
                 </div>
 
-                {{-- PAGINATION --}}
-                @if ($data->hasPages())
-                    <div class="d-flex justify-content-end p-3">
-                        {{ $data->links() }}
-                    </div>
-                @endif
-
             </div>
+
+            {{-- PAGINATION --}}
+            @if ($data->total() > 0)
+                <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center">
+                    <small class="text-muted my-2">
+                        Menampilkan {{ $data->firstItem() }}&ndash;{{ $data->lastItem() }}
+                        dari {{ $data->total() }} vendor
+                    </small>
+
+                    <div class="my-2">
+                        {{ $data->onEachSide(1)->links('pagination::bootstrap-4') }}
+                    </div>
+                </div>
+            @endif
         </div>
 
     </div>
+
+    <style>
+        /* Hilangkan margin bawah bawaan Bootstrap 4 agar rata dengan teks di sebelahnya */
+        .card-footer .pagination {
+            margin-bottom: 0;
+        }
+
+        /* Filter */
+        .filter-control {
+            height: 38px;
+            border: 1px solid #d1d3e2;
+            border-radius: .6rem;
+            background-color: #fff;
+            font-size: .875rem;
+            box-shadow: none;
+        }
+
+        .filter-control:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 .15rem rgba(78, 115, 223, .2);
+        }
+
+        .filter-select {
+            width: 210px;
+            max-width: 100%;
+        }
+
+        .filter-search {
+            position: relative;
+            flex: 1 1 260px;
+            max-width: 380px;
+        }
+
+        .filter-search i {
+            position: absolute;
+            top: 50%;
+            left: 13px;
+            transform: translateY(-50%);
+            color: #b7b9cc;
+            pointer-events: none;
+        }
+
+        .filter-search .filter-control {
+            width: 100%;
+            padding-left: 36px;
+        }
+
+        .filter-btn {
+            height: 38px;
+            padding: 0 1.4rem;
+            border-radius: .6rem;
+        }
+
+        .filter-reset {
+            height: 38px;
+            line-height: 24px;
+            text-decoration: none;
+        }
+
+        @media (max-width: 575.98px) {
+
+            .filter-select,
+            .filter-search {
+                width: 100%;
+                max-width: none;
+                flex-basis: 100%;
+                margin-right: 0 !important;
+            }
+        }
+    </style>
 @endsection

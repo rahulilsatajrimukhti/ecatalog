@@ -17,6 +17,32 @@ class ProductService
         ])->orderBy('name', 'asc')->get();
     }
 
+    /**
+     * Daftar produk per halaman, dengan filter kategori dan pencarian.
+     * Filter: ['category' => id, 'search' => teks]
+     */
+    public function paginate(array $filters = [], int $perPage = 10)
+    {
+        return Product::with([
+            'category',
+            'subCategory',
+        ])
+            ->when(! empty($filters['category']), function ($q) use ($filters) {
+                $q->where('category_id', (int) $filters['category']);
+            })
+            ->when(! empty($filters['search']), function ($q) use ($filters) {
+                $search = trim($filters['search']);
+
+                $q->where(function ($w) use ($search) {
+                    $w->where('name', 'like', "%{$search}%")
+                        ->orWhere('product_code', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('name', 'asc')   // sama dengan urutan getAll()
+            ->paginate($perPage)
+            ->withQueryString();       // filter tetap terbawa saat pindah halaman
+    }
+
     public function store(
         ProductDTO $dto,
         Request $request

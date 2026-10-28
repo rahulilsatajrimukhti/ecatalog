@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Product extends Model
 {
@@ -45,5 +46,14 @@ class Product extends Model
     public function scopeNeedsAttention($query)
     {
         return $query->whereColumn('stock', '<=', 'minimum_stock');
+    }
+
+    protected function stockStatus(): Attribute
+    {
+        return Attribute::get(fn() => match (true) {
+            $this->stock <= 0                    => 'out',
+            $this->stock <= $this->minimum_stock => 'low',
+            default                              => 'available',
+        });
     }
 }

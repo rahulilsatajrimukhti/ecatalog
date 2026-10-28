@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Models\Categories;
 use App\Models\SubCategories;
 use App\Services\ProductService;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -15,11 +16,20 @@ class ProductController extends Controller
         protected ProductService $service
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $data = $this->service->getAll();
+        $request->validate([
+            'search'   => ['nullable', 'string', 'max:100'],
+            'category' => ['nullable', 'integer'],
+        ]);
 
-        return view('products.index', compact('data'));
+        $data = $this->service->paginate(
+            $request->only(['search', 'category'])
+        );
+
+        $categories = Categories::orderBy('name', 'asc')->get();
+
+        return view('products.index', compact('data', 'categories'));
     }
 
     public function create()

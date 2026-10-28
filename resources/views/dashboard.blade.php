@@ -359,7 +359,7 @@
                                 <div class="item-meta">{{ $product->category->name ?? '-' }}</div>
                             </div>
                             <div class="item-price">
-                                Rp {{ number_format($product->price ?? 0, 0, ',', '.') }}
+                                Rp {{ number_format($product->purchase_price ?? 0, 0, ',', '.') }}
                             </div>
                         </div>
                     @empty

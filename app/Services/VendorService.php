@@ -7,22 +7,30 @@ use App\Models\Vendor;
 
 class VendorService
 {
-
-    public function getAll()
+    /**
+     * Daftar vendor per halaman.
+     * Filter: ['search' => teks, 'status' => '1' (aktif) | '0' (nonaktif)]
+     */
+    public function getAll(array $filters = [], int $perPage = 10)
     {
-        $query = Vendor::query();
+        $search = trim($filters['search'] ?? '');
+        $status = $filters['status'] ?? null;
 
-        if ($search = request('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('vendor_code', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%")
-                    ->orWhere('contact_person', 'like', "%{$search}%");
-            });
-        }
-
-        return $query->latest()->paginate(10);
+        return Vendor::query()
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($w) use ($search) {
+                    $w->where('vendor_code', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhere('contact_person', 'like', "%{$search}%");
+                });
+            })
+            ->when(in_array($status, ['0', '1', 0, 1], true), function ($q) use ($status) {
+                $q->where('is_active', (bool) $status);
+            })
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();   // pencarian & filter tetap terbawa saat pindah halaman
     }
-
 
     public function find($id): Vendor
     {

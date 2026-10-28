@@ -34,7 +34,6 @@
                     <thead class="bg-light">
                         <tr class="small text-muted text-center">
                             <th width="50">#</th>
-                            <th class="text-left">Kode</th>
                             <th class="text-left">Nama</th>
                             <th class="text-left">Email</th>
                             <th class="text-left">No. HP</th>
@@ -50,7 +49,6 @@
                         @forelse($data as $key => $row)
                             <tr>
                                 <td class="text-center small">{{ $key + 1 }}</td>
-                                <td class="small">{{ $row->member_code ?? '-' }}</td>
                                 <td class="small font-weight-600">{{ $row->name }}</td>
                                 <td class="small">{{ $row->email }}</td>
                                 <td class="small">{{ $row->phone ?? '-' }}</td>
