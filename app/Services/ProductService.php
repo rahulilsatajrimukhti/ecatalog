@@ -56,7 +56,7 @@ class ProductService
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')
-                ->store('products', $this->disk());
+                ->store('', $this->disk());
         }
 
         return Product::create($data);
@@ -87,7 +87,7 @@ class ProductService
             }
 
             $data['image'] = $request->file('image')
-                ->store('products', $this->disk());
+                ->store('', $this->disk());
         }
 
         $product->update($data);
