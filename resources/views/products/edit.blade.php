@@ -221,7 +221,7 @@
                                             <div class="small text-muted">Preview Gambar Produk</div>
                                         </div>
 
-                                        <img id="imagePreview" src="{{ $data->image ? Storage::url($data->image) : '' }}"
+                                        <img id="imagePreview" src="{{ $data->image ? $data->image_url : '' }}"
                                             alt="{{ $data->name }}"
                                             class="img-fluid rounded {{ $data->image ? '' : 'd-none' }}"
                                             style="max-height:250px; max-width:100%; object-fit:contain;">
