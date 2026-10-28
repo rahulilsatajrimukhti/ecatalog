@@ -96,7 +96,7 @@
                                     {{-- GAMBAR PRODUK --}}
                                     <td class="text-center align-middle">
                                         @if ($row->image)
-                                            <img src="{{ Storage::url($row->image) }}" width="45" height="60"
+                                            <img src="{{ $row->image_url }}" width="45" height="60"
                                                 class="rounded shadow-sm border" style="object-fit: cover; cursor: pointer;"
                                                 data-toggle="modal" data-target="#imageModal{{ $row->id }}"
                                                 alt="{{ $row->name }}">
@@ -106,7 +106,7 @@
                                                 <div class="modal-dialog modal-lg modal-dialog-centered">
                                                     <div class="modal-content border-0 shadow">
                                                         <div class="modal-body p-2 text-center bg-dark">
-                                                            <img src="{{ Storage::url($row->image) }}"
+                                                            <img src="{{ $row->image_url }}"
                                                                 class="img-fluid rounded shadow" alt="{{ $row->name }}">
                                                         </div>
                                                     </div>
