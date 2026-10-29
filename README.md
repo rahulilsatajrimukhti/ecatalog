@@ -13,27 +13,25 @@ Dokumen ini ditujukan untuk developer yang akan melanjutkan atau memelihara apli
 
 | Bagian | Teknologi |
 |---|---|
-| Framework | Laravel 13.6, PHP 8.3 |
+| Framework | Laravel 13, PHP 8.3 |
 | Tampilan | Blade |
 | UI customer | Bootstrap 5.3.3 (CDN), CSS kustom berawalan `ec-` di layout customer |
 | UI admin | SB Admin 2 (Bootstrap 4) |
-| Database lokal | MySQL (Laragon) |
-| Database production | TiDB Cloud Starter (kompatibel MySQL) |
-| Penyimpanan gambar production | Supabase Storage (protokol S3) |
-| Hosting | Vercel, runtime komunitas `vercel-php@0.9.0` |
+| Database | MySQL / MariaDB |
+| Penyimpanan gambar | Disk Laravel yang bisa dikonfigurasi: lokal (`public`) atau object storage kompatibel S3 |
 
 ## 2. Arsitektur
 
 ```
 Pengunjung / Admin
         |
-     Vercel  (aplikasi Laravel, region sin1)
-      |     \
-      |      \--> Supabase Storage  (gambar produk, bucket `products`)
-      v
-  TiDB Cloud  (database `ecatalog`, Singapore, wajib SSL)
-
-GitHub (repo `ecatalog`)  --git push ke main-->  Vercel (deploy otomatis)
+   Web server (Nginx / Apache)
+        |
+   Aplikasi Laravel
+      |         \
+      v          v
+  Database    Penyimpanan gambar
+  (MySQL)     (disk lokal atau S3)
 ```
 
 ## 3. Setup lokal
@@ -46,7 +44,7 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Isi `.env` dengan koneksi MySQL lokal (`DB_*`), lalu:
+Isi `.env` dengan koneksi database lokal (`DB_*`), lalu:
 
 ```bash
 php artisan migrate
@@ -56,31 +54,22 @@ php artisan serve
 
 Catatan: seeder belum didokumentasikan. Cek folder `database/seeders` untuk data awal (user admin, menu, level).
 
-Di lokal, `PRODUCT_IMAGE_DISK` tidak perlu diisi (default `public`), sehingga gambar disimpan di `storage/app/public/products` dan diakses lewat symlink `public/storage`.
-
 ## 4. Environment variables
 
-Nilai rahasia **tidak boleh** masuk Git. Di production semuanya diisi lewat **Vercel > Settings > Environment Variables**.
+Nilai rahasia **tidak boleh** masuk Git.
 
 | Variabel | Fungsi |
 |---|---|
-| `APP_KEY` | Kunci enkripsi Laravel (sesi, cookie). Buat dengan `php artisan key:generate --show`. |
-| `APP_ENV` | `production` di Vercel |
-| `APP_URL` | URL publik, misalnya `https://ecatalog-one.vercel.app` |
+| `APP_KEY` | Kunci enkripsi Laravel (sesi, cookie). Buat dengan `php artisan key:generate`. Gunakan kunci berbeda di tiap lingkungan. |
+| `APP_ENV` | `local` atau `production` |
+| `APP_DEBUG` | `false` di production |
+| `APP_URL` | URL publik aplikasi |
 | `DB_CONNECTION` | `mysql` |
-| `DB_HOST`, `DB_PORT` | Alamat server TiDB dan port (`4000`) |
-| `DB_DATABASE` | `ecatalog` |
-| `DB_USERNAME`, `DB_PASSWORD` | Akun TiDB. Username lengkap berbentuk `xxxx.root`. |
-| `DB_USE_SSL` | `true` di production. Mengaktifkan sertifikat `certs/tidb-ca.pem` (lihat `config/database.php`). Kosongkan di lokal. |
-| `PRODUCT_IMAGE_DISK` | `s3` di production, kosong/`public` di lokal (dibaca `config/filesystems.php` sebagai `product_disk`) |
-| `AWS_ENDPOINT` | Endpoint S3 Supabase (`https://<ref>.storage.supabase.co/storage/v1/s3`) |
-| `AWS_DEFAULT_REGION` | `ap-southeast-1` |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Access key S3 Supabase |
-| `AWS_BUCKET` | `products` |
-| `AWS_USE_PATH_STYLE_ENDPOINT` | `true` |
-| `AWS_URL` | Alamat publik gambar (`https://<ref>.supabase.co/storage/v1/object/public/products`) |
-
-Variabel berikut sudah diatur di `vercel.json` sehingga tidak perlu diisi di dashboard: `APP_NAME`, `APP_DEBUG`, `SESSION_DRIVER=cookie`, `CACHE_STORE=array`, `LOG_CHANNEL=stderr`, dan path cache di `/tmp`.
+| `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Koneksi database |
+| `DB_USE_SSL` | Opsional. `true` untuk database yang mewajibkan SSL (memakai sertifikat CA di folder `certs/`, lihat `config/database.php`). Kosongkan jika tidak diperlukan. |
+| `PRODUCT_IMAGE_DISK` | Disk penyimpanan gambar produk: `public` (default, disk lokal) atau `s3`. Dibaca `config/filesystems.php` sebagai `product_disk`. |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`, `AWS_ENDPOINT`, `AWS_USE_PATH_STYLE_ENDPOINT`, `AWS_URL` | Hanya dipakai jika `PRODUCT_IMAGE_DISK=s3`. `AWS_URL` adalah alamat publik gambar. |
+| `SESSION_DRIVER`, `CACHE_STORE`, `LOG_CHANNEL` | Sesuaikan dengan lingkungan (lihat bagian Deploy) |
 
 ## 5. Struktur kode
 
@@ -93,19 +82,17 @@ app/
                       Product, SubCategories, UserLevel, User, Vendor
   Models/             Categories, Menu, Product, SubCategories, User, UserLevel, Vendor
   DTO/                objek data untuk input form (mis. ProductDTO)
+  Http/Requests/      validasi form (Store*/Update*)
   Http/Middleware/    CheckPermission (alias `check.permission`)
 config/
   filesystems.php     disk gambar, termasuk `product_disk`
-  database.php        opsi SSL untuk TiDB
-certs/tidb-ca.pem     sertifikat CA TiDB (publik, aman di Git)
-api/index.php         pintu masuk Laravel di Vercel
-vercel.json           konfigurasi deploy Vercel
+  database.php        opsi koneksi database, termasuk SSL opsional
 bootstrap/app.php     routing, alias middleware, trustProxies
 ```
 
 Hal yang perlu diketahui:
 
-- **Gambar produk** disimpan dan dihapus lewat `ProductService`, yang membaca disk dari `config('filesystems.product_disk')`. Alamat gambar diambil lewat accessor `$product->image_url` di model `Product`. Jangan memakai `asset('storage/...')` langsung di Blade.
+- **Gambar produk** disimpan dan dihapus lewat `ProductService`, yang membaca disk dari `config('filesystems.product_disk')`. Alamat gambar diambil lewat accessor `$product->image_url` di model `Product`. Jangan memakai `asset('storage/...')` langsung di Blade, supaya penyimpanan tetap bisa dipindah lewat konfigurasi.
 - **Status stok** tersedia lewat accessor `stock_status` (`out`, `low`, `available`) dan scope `lowStock`, `outOfStock`, `needsAttention` di model `Product`.
 - **Hak akses**: middleware `check.permission` memeriksa izin user berdasarkan level dan menu. Pengaturan izin ada di halaman `user-levels/{id}/permissions`.
 
@@ -145,7 +132,7 @@ Semua resource memakai pola resource standar (`index`, `create`, `store`, `show`
 | `/user-levels` | `UserLevelController` | Kelola level user |
 | `/user-levels/{id}/permissions` | `UserLevelController@permissions`, `@updatePermissions` | Atur izin menu per level |
 
-Daftar lengkap: `php artisan route:list --except-vendor` (60 route).
+Daftar lengkap: `php artisan route:list --except-vendor`.
 
 ## 7. Database
 
@@ -156,32 +143,35 @@ Ada 11 tabel di database `ecatalog`:
 | `products` | Data produk (kode, nama, harga, stok, stok minimum, satuan, gambar, status aktif) |
 | `categories`, `sub_categories` | Kategori dan sub-kategori produk |
 | `vendors` | Data mitra/vendor |
-| `users` | Akun admin. Masih memuat kolom sisa perpustakaan (`member_code`, `avatar`) yang belum dipakai dan boleh dibersihkan nanti. |
+| `users` | Akun admin. Masih memuat kolom sisa (`member_code`, `avatar`) yang belum dipakai dan boleh dibersihkan nanti. |
 | `user_levels` | Level user |
 | `menus`, `user_level_menus` | Menu admin dan izin menu per level user |
 | `sessions`, `password_reset_tokens`, `migrations` | Tabel bawaan Laravel |
 
-Catatan: di production `SESSION_DRIVER=cookie`, jadi tabel `sessions` tidak dipakai di Vercel.
+## 8. Deploy ke server (Linux, Nginx/Apache)
 
-## 8. Deploy
+1. Siapkan PHP 8.3 beserta ekstensi yang dibutuhkan Laravel, serta Composer.
+2. Arahkan web server ke folder `public/` (bukan root project).
+3. Clone repo, lalu `composer install --no-dev --optimize-autoloader`.
+4. Buat `.env` dari `.env.example`, lalu isi `APP_KEY`, `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, dan koneksi database.
+5. Atur driver untuk production, misalnya `SESSION_DRIVER=database` (tabel `sessions` sudah ada), `CACHE_STORE=file` atau `database`, dan `LOG_CHANNEL=daily`.
+6. `php artisan migrate --force`
+7. Penyimpanan gambar: dengan `PRODUCT_IMAGE_DISK=public`, jalankan `php artisan storage:link`. Atau isi variabel `AWS_*` dan `PRODUCT_IMAGE_DISK=s3` bila memakai object storage.
+8. Beri izin tulis ke `storage/` dan `bootstrap/cache/` untuk user web server.
+9. `php artisan config:cache`, `php artisan route:cache`, dan `php artisan view:cache`.
+10. Pasang HTTPS. Jika aplikasi berada di belakang load balancer atau reverse proxy, pastikan `trustProxies` di `bootstrap/app.php` dibatasi ke IP proxy tersebut.
 
-Setiap `git push` ke `main` memicu deploy otomatis di Vercel.
+Memindahkan data dari lingkungan lain:
 
-Perubahan skema database **tidak** otomatis. Jalankan migrasi terhadap TiDB secara manual:
+- **Database:** ekspor dengan `mysqldump --default-character-set=utf8mb4`, impor dengan opsi charset yang sama.
+- **Gambar:** salin ke `storage/app/public/products` dengan nama file yang sama (kolom `image` menyimpan path seperti `products/namafile.png`).
 
-1. Isi `.env` lokal sementara dengan kredensial TiDB, ditambah `DB_USE_SSL=true`.
-2. `php artisan migrate --force`
-3. Kembalikan `.env` ke koneksi lokal.
+Setelah mengubah `.env`, jalankan ulang `php artisan config:cache`.
 
-Mengganti rahasia (password TiDB, access key Supabase, `APP_KEY`): ubah di Vercel, lalu **Redeploy**. Mengganti `APP_KEY` membuat semua user logout.
+## 9. Catatan penting
 
-## 9. Catatan penting (gotchas)
-
-- **Disk Vercel tidak permanen.** File yang diunggah ke `storage/` hilang. Karena itu gambar produk memakai disk `s3` (Supabase) di production.
-- **Symlink `public/storage` tidak berfungsi di Vercel.** Jangan mengandalkannya untuk production.
-- **TiDB mewajibkan SSL.** Sertifikat ada di `certs/tidb-ca.pem` dan diaktifkan lewat `DB_USE_SSL=true`.
-- **Charset saat ekspor/impor database.** Gunakan `--default-character-set=utf8mb4` pada `mysqldump` dan `mysql`. Di Windows charset bawaan (`cp850`) ditolak TiDB.
-- **`trustProxies(at: '*')` di `bootstrap/app.php`** diperlukan agar Laravel mengenali HTTPS dari proxy Vercel. Tanpa itu, URL dan aset bisa terbaca `http://`.
-- **Rute aset statis** (`img`, `css`, `js`, `vendor`, `fonts`) dideklarasikan eksplisit di `vercel.json`. Jika menambah folder statis baru di `public/`, tambahkan ke rute tersebut.
-- **`.vercelignore` memakai `/vendor`** (dengan garis miring di depan) agar hanya folder Composer di root yang dibuang, bukan `public/vendor/`.
-- **Paket gratis** Vercel (Hobby), TiDB Starter, dan Supabase punya batas dan syarat yang bisa berubah. Hobby ditujukan untuk penggunaan non-komersial. Supabase gratis dapat menjeda project yang lama tidak aktif.
+- **Gunakan `image_url`, bukan `asset('storage/...')`**, untuk menampilkan gambar produk.
+- **Jangan memakai ulang `APP_KEY`, password, atau access key** antar lingkungan. Buat yang baru untuk tiap lingkungan, dan jangan commit `.env`.
+- **Charset database:** gunakan `utf8mb4` saat ekspor dan impor agar karakter tidak rusak.
+- **Perubahan skema** hanya lewat migrasi (`database/migrations`), lalu `php artisan migrate --force` di tiap lingkungan.
+- **Mengubah `config/` atau `.env`** di production perlu `php artisan config:cache` ulang.
