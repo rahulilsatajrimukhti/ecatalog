@@ -59,6 +59,15 @@
         @endif
     @endforeach
 
+
+    {{-- Go to Website --}}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url('/') }}" target="_blank">
+            <i class="fas fa-fw fa-globe"></i>
+            <span>Go to Website</span>
+        </a>
+    </li>
+
     <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
 
