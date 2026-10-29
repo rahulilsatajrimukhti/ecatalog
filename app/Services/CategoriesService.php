@@ -9,7 +9,7 @@ class CategoriesService
 {
     public function getAll()
     {
-        return Categories::latest()->get();
+        return Categories::latest()->paginate(10);
     }
 
     public function store(CategoriesDTO $dto)

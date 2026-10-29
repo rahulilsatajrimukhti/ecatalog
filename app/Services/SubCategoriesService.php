@@ -11,8 +11,8 @@ class SubCategoriesService
     public function getAll()
     {
         return SubCategories::with('categories')
-            ->orderBy('name', 'asc')
-            ->get();
+            ->latest()
+            ->paginate(10);
     }
 
     public function getCategory()
